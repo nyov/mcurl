@@ -29,7 +29,7 @@ for (my $i = 0; $i <= $#ARGV; ++$i)	#
 		my $mcurlHelp  = " -tm, --timemap <link|rdf> To select the type of Timemap it may be link or html\n";
 		$mcurlHelp .= " -tg, --timegate <uri[,uri]> To select the favorite Timegates\n";
 		$mcurlHelp .= " -dt, --datetime <date in rfc822 format> Select the date in the past (For example, Thu, 31 May 2007 20:35:00 GMT)\n"; 
-                $mcurlHelp .= " -mode  <strict|relaxed> Specify mcurl embedded resource policy, default value is relaxed\n";
+                $mcurlHelp .= " -mode  <thorough|fast> Specify mcurl embedded resource policy, default value is fast\n";
 		print $command.$mcurlHelp;
 		exit;
 	}elsif($ARGV[$i] eq '--timegate' or $ARGV[$i] eq '-tg')
@@ -105,7 +105,7 @@ if(length($timegate) != 0){
     $mt->setTimeGate($timegate);
 }
 
-if($mode eq 'strict'){
+if($mode eq 'thorough'){
     $mt->setMode(1);
 }
 

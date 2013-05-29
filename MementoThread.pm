@@ -4,7 +4,7 @@ use URI;
 
 use FindBin;
 use lib "$FindBin::Bin";
-use mementoParser;
+use MementoParser;
 #constructor
 sub new {
 
@@ -268,23 +268,22 @@ sub findMemento(){
     }
    #########################
    # TEST - 1
-    my $rewrittenURI = $self->unrewriteURI($self->{URIQ});
-    if( length($self->{Headers}->{MementoDT})>0 or length($rewrittenURI)>0 ){
+    my $isRewrittenURI = $self->unrewriteURI($self->{URIQ});
+    if( length($self->{Headers}->{MementoDT})>0 or $isRewrittenURI ){
         
 
         $tg_flag = 0;
         $self->{URIR} = '';
-        #set uri-r = blank
     #    print "=============================================================\n";
 
          if($self->{Headers}->{status} > 300 and $self->{Headers}->{status} <400){
             #Follow
             if($self->{Debug} == 1) {print "DEBUG: TEST - 1 YES FOLLOW\n"};     
-             return $self->follow();
+            return $self->follow();
         } else {
             if($self->{Debug} == 1) {print "DEBUG: TEST - 1 YES MEMENTO\n"};     
 
-                $self->{memento}=$self->{URIQ};
+            $self->{memento}=$self->{URIQ};
             return $self->{URIQ};
         }
     }else {
@@ -626,11 +625,21 @@ sub retrieve_embedded {
     foreach my $oldURI (keys %hash)
     { 
         my $completeOldURI = $oldURI;
-
+        print $completeOldURI."\n";
         #There is a missing testcase here if the URI ends with .html for example
         if(index($oldURI, "http") != 0){
-           my $urlObj = URI->new($self->{memento});
-           $completeOldURI = URI->new_abs($oldURI, $urlObj );  ;
+            $base_uri = $self->{memento};
+            $orgIdx = index($base_uri, "http",  1);
+
+            if($orgIdx>1){
+                $base_memento= substr $base_uri,0,$orgIdx ;
+               $base_uri= substr $base_uri,$orgIdx ;
+                my $urlObj = URI->new($base_uri);
+           
+               $completeOldURI = URI->new_abs($oldURI, $urlObj );  ;
+               
+            }
+
            #$completeOldURI = $baseURI. $oldURI;
         }
 
@@ -706,7 +715,8 @@ sub unrewriteURI {
         index($orgURI ,'wayback.archive-it.org') > -1  or
         index($orgURI ,'enterprise.archiefweb.eu/archives/archiefweb') > -1 or
         index($orgURI ,'memento.waybackmachine.org/memento/') > -1 or
-        index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1
+        index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1 or
+        index($orgURI ,'webcitation.org') > -1 
         ) {
         
             my $nHttp = index($orgURI , 'http://' , 10);
@@ -715,15 +725,15 @@ sub unrewriteURI {
                         print "DEBUG: Successfully, URI is: ".substr $orgURI,$nHttp ."\n";
                         print "\n";
                         }
-                return substr $orgURI,$nHttp ;
+             #   return substr $orgURI,$nHttp ;
             }
-
+        return 1;
     }
     if($self->{Debug} == 1){
         print "UnSuccessfully\n";
     }
-    return "";
-
+    #return "";
+    return 0;
 }
 
 sub process_timemap{

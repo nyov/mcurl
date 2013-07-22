@@ -1,12 +1,9 @@
-#!/usr/bin/perl
-#
-
+#!/usr/bin/env perl
 
 use FindBin;
 use lib "$FindBin::Bin";
 use MementoThread;
 use strict;
-
 
 
 if (@ARGV < 1) {
@@ -20,7 +17,7 @@ my $mode = '';
 my $debug = 0;
 my $override = 0;
 my $replacefile = '';
-for (my $i = 0; $i <= $#ARGV; ++$i)	# 
+for (my $i = 0; $i <= $#ARGV; ++$i)
 {
 	if($ARGV[$i] eq '--help')
 	{
@@ -37,26 +34,21 @@ for (my $i = 0; $i <= $#ARGV; ++$i)	#
 		$ARGV[$i] = '';
 		$timegate = $ARGV[++$i];
 		$ARGV[$i] = '';
-		
-		
 	}elsif($ARGV[$i] eq '--override' )
 	{
 		$ARGV[$i] = '';
 		$override = 1;
 		#$ARGV[$i] = '';
-		
-		
 	}elsif($ARGV[$i] eq '--timemap' or $ARGV[$i] eq '-tm')
 	{
                 # we need to fix this line to add the default timemap
 		$ARGV[$i] = '';
                 if (index($ARGV[$i+1],'-') == 0){
-                    $timemap =  'link';    
+                    $timemap =  'link';
                 } else {
                     $timemap =  $ARGV[++$i];
                 }
 		$ARGV[$i] = '';
-	
 	}elsif($ARGV[$i] eq '--datetime' or $ARGV[$i] eq '-dt')
 	{
 		$ARGV[$i] = '';
@@ -65,7 +57,6 @@ for (my $i = 0; $i <= $#ARGV; ++$i)	#
 
 	}elsif($ARGV[$i] eq '--dateTimeRange')
 	{
-	
 	}elsif($ARGV[$i] eq '--replacedump')
 	{
 		$ARGV[$i] = '';
@@ -92,7 +83,7 @@ for (my $i = 0; $i <= $#ARGV; ++$i)	#
 my $URI = $ARGV[$#ARGV];
 $ARGV[$#ARGV] = '';
 
-for (my $i = 0; $i <= $#ARGV; ++$i)	# 
+for (my $i = 0; $i <= $#ARGV; ++$i)
 {
     if ( index($ARGV[$i] , ' ') > -1 ){
         $ARGV[$i] = '"' .$ARGV[$i] . '"';
@@ -112,7 +103,7 @@ if($mode eq 'strict'){
 
 $mt->setURI($URI);
 $mt->setDateTime($acceptDateTimeHeader);
-            
+
 $mt->setDebug($debug);
 $mt->setOverride($override);
 $mt->setReplaceFile($replacefile);
@@ -124,7 +115,7 @@ $mt->setParams(@ARGV);
 #$mt->handle_redirection();
 
 if( $timemap )
-{	
+{
      my $results= $mt->process_timemap( $timemap ,@ARGV );
 
     if( $debug == 1){
@@ -146,6 +137,3 @@ if( $timemap )
         print "\n--------------------------END PAGE CONTENT-------------------------------------------\n";
         }
 }
-
-
-

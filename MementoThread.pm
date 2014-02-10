@@ -1,6 +1,6 @@
 package MementoThread;
 
-use mementoParser;
+use MementoParser;
 use URI;
 
 use FindBin;
@@ -91,42 +91,44 @@ sub setReplaceFile() {
 	$self->{ReplaceFile} = $lReplaceFile if defined($lReplaceFile);
 }
 
-sub read_cmd{
-	my ($self, @arg) = @_;
-	$self->printDebug("read_cmd(@arg);");
+sub read_cmd_multi{
+	my ($self,$scalar,@arg) = @_;
+	$self->printDebug("read_cmd_multi($scalar,@arg);");
 
 	my @out;
-	my $pid = open(KIDDO, "-|", @arg);
+	my $sep = $/;
+	my $pid = open($child, "-|", @arg);
 	defined($pid) || die "can't fork: $!";
 	if ($pid) { # parent
-		while( <KIDDO> ){
-			push @out, $_;
-		}
-#		@out = <KIDDO>;
-		close(KIDDO) || warn "kid exited $?";
+		$/ = undef if $scalar;
+		@out = <$child>;
+		$/ = $sep;
+		close($child) || warn "child process exited $?";
 	} else { # child
 		($EUID, $EGID) = ($UID, $GID); # suid only
 		exec @arg || die "can't exec program: $!";
 	}
-	return @out;
+	return $scalar ? @out[0] : @out;
 }
 
+sub read_cmd{
+	my ($self,@arg) = @_;
+	return $self->read_cmd_multi(1,@arg);
+}
 sub datetime_flag {
 	my ($self) = @_;
-	if(length($self->{DateTime}) != 0){
-		return "-H", "'Accept-Datetime: $self->{DateTime}'";
-	}
-	return ();
+	return () unless $self->{DateTime};
+	return "-H", "'Accept-Datetime: $self->{DateTime}'";
 }
 sub timegate_uri {
 }
 sub head {
 	my ($self) = @_;
 	$self->printDebug("Starting with head command to determine resource type.");
-	my @ret=$self->read_cmd("curl","-I","--trace",$self->datetime_flag(),$self->{URI});
+	my $ret=$self->read_cmd(qw.curl -I --trace.,$self->datetime_flag(),$self->{URI});
 	
 	#Start to look to the different Headers options
-	$self->parseHeaders(@ret);
+	$self->parseHeaders($ret);
 
 	#In some cases, we need to lookup to URI format itself
 	$self->determineResourceType();
@@ -152,7 +154,7 @@ sub selectTimeGate(){
 		
 		#Additional steps required in calling the function the memento
 		#or, we can remove one of these fields at all
-	} elsif($self->{Info}->{TimeGate})){
+	} elsif($self->{Info}->{TimeGate}){
 		$self->printDebug("TimeGate is defined in Link header case: Accepted");
 		$self->{TimeGate}= $self->{Info}->{TimeGate} ;
 
@@ -169,7 +171,7 @@ sub selectTimeGate(){
 }
 
 sub parseHeaders {
-   my ($self, $header) @_;
+   my ($self, $header) = @_;
    $self->printDebug("In parsing header function");
    $_ = $tmp;
 
@@ -276,36 +278,23 @@ sub determineResourceType {
 sub discover_tg_robots {
 	my ($self, @params) = @_;
 	$self->printDebug("Discovering Timegate robots");
-
 	my $robotTG = '';
-
 	my $urlObj = URI->new($self->{URI});
-
 	my $host =	"http://".$urlObj->host( ) .'/robots.txt' ;
-	my $robots =$self->read_cmd((qw(curl -L),$host));
-
-	my @lines = split('\n',$robots);
-
-	 foreach (@lines) {
+	my @lines =$self->read_cmd_multi(undef,(qw(curl -L),$host));
+	foreach (@lines) {
 		if( index($_, 'TimeGate') ==0){
 			$robotTG = substr( $_, 9, length ($_)-10);
-
 		} elsif(index($_, 'Archived') ==0){
-
-
 			if( $_ eq '*' or index($self->{URI}, substr( $_, 10, length ($_)-11)) > -1){
-
 				if($self->{Debug} == 1){
 					print "\nDEBUG: A new TimeGate is discovered through (robots.txt): $robotTG";
 				}
 				$self->{RobotsTG} = $robotTG;
 				return;
-				}
-
+			}
 		}
-	 }
-
-
+	}
 }
 
 sub process_uri {
@@ -321,7 +310,7 @@ sub process_uri {
 	my $info = $self->{Info};
 	my $uri = $self->{TimeGate};
 	$uri .= "/$self->{URI}" unless ($info->{TimeGate} or $info->{Type} eq "TimeGate");
-	my $result =$self->read_cmd((@command,$uri));
+	my $result =$self->read_cmd(@command,$uri);
 
 	#based on the type (text/html) and stict/relaxed mode we will force the retrieve embedded via memento method
 	return $self->retrieve_embedded($result) if $self->{FollowEmbedded} and $self->{Mode};

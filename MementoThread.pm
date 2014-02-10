@@ -91,42 +91,44 @@ sub setReplaceFile() {
 	$self->{ReplaceFile} = $lReplaceFile if defined($lReplaceFile);
 }
 
-sub read_cmd{
-	my ($self, @arg) = @_;
-	$self->printDebug("read_cmd(@arg);");
+sub read_cmd_multi{
+	my ($self,$scalar,@arg) = @_;
+	$self->printDebug("read_cmd_multi($scalar,@arg);");
 
 	my @out;
-	my $pid = open(KIDDO, "-|", @arg);
+	my $sep = $/;
+	my $pid = open($child, "-|", @arg);
 	defined($pid) || die "can't fork: $!";
 	if ($pid) { # parent
-		while( <KIDDO> ){
-			push @out, $_;
-		}
-#		@out = <KIDDO>;
-		close(KIDDO) || warn "kid exited $?";
+		$/ = undef if $scalar;
+		@out = <$child>;
+		$/ = $sep;
+		close($child) || warn "child process exited $?";
 	} else { # child
 		($EUID, $EGID) = ($UID, $GID); # suid only
 		exec @arg || die "can't exec program: $!";
 	}
-	return @out;
+	return $scalar ? @out[0] : @out;
 }
 
+sub read_cmd{
+	my ($self,@arg) = @_;
+	return $self->read_cmd_multi(1,@arg);
+}
 sub datetime_flag {
 	my ($self) = @_;
-	if(length($self->{DateTime}) != 0){
-		return "-H", "'Accept-Datetime: $self->{DateTime}'";
-	}
-	return ();
+	return () unless $self->{DateTime};
+	return "-H", "'Accept-Datetime: $self->{DateTime}'";
 }
 sub timegate_uri {
 }
 sub head {
 	my ($self) = @_;
 	$self->printDebug("Starting with head command to determine resource type.");
-	my @ret=$self->read_cmd("curl","-I","--trace",$self->datetime_flag(),$self->{URI});
+	my $ret=$self->read_cmd(qw.curl -I --trace.,$self->datetime_flag(),$self->{URI});
 
 	#Start to look to the different Headers options
-	$self->parseHeaders(@ret);
+	$self->parseHeaders($ret);
 
 	#In some cases, we need to lookup to URI format itself
 	$self->determineResourceType();
@@ -265,16 +267,10 @@ sub determineResourceType {
 sub discover_tg_robots {
 	my ($self, @params) = @_;
 	$self->printDebug("Discovering Timegate robots");
-
 	my $robotTG = '';
-
 	my $urlObj = URI->new($self->{URI});
-
 	my $host = "http://".$urlObj->host( ) .'/robots.txt' ;
-	my $robots = $self->read_cmd((qw(curl -L),$host));
-
-	my @lines = split('\n',$robots);
-
+	my @lines =$self->read_cmd_multi(undef,(qw(curl -L),$host));
 	foreach (@lines) {
 		if( index($_, 'TimeGate') ==0){
 			$robotTG = substr( $_, 9, length ($_)-10);

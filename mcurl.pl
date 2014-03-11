@@ -30,16 +30,16 @@ my $uri = pop @ARGV if @ARGV > 1;
 while (my $arg = shift @ARGV){
 	switch ($arg) {
 		#case ['--dateTimeRange'] {}
-		case ['-o', '--output']	  { push @curlargs, ($arg, $outfile = shift @ARGV); } 
+		case ['-o', '--output']   { push @curlargs, ($arg, $outfile = shift @ARGV); }
 		case ['-V', '--version']  { die "mcurl 0.86 Memento Enabled curl based on " . `curl -V`; }
 		case ['-tm','--timemap']  { $timemap = index($ARGV[0],'-') == 0 ? 'link' : shift @ARGV; }
 		case ['-tg','--timegate'] { $mt->setTimeGate(shift @ARGV); }
 		case ['-dt','--datetime'] { $mt->setDateTime(shift @ARGV); }
-		case ['--help'] 	  { die `curl --help`=~ s/curl/mcurl/gr . $help; }
-		case ['--replacedump'] 	  { $mt->setReplaceFile(shift @ARGV); }
-		case ['--mode'] 	  { $mt->setMode(shift @ARGV eq 'strict' ? 1 : 0); }
-		case ['--debug'] 	  { $mt->setDebug(1); }
-		case ['--override'] 	  { $mt->setOverride(1); }
+		case ['--help']           { die `curl --help`=~ s/curl/mcurl/gr . $help; }
+		case ['--replacedump']    { $mt->setReplaceFile(shift @ARGV); }
+		case ['--mode']           { $mt->setMode(shift @ARGV eq 'strict' ? 1 : 0); }
+		case ['--debug']          { $mt->setDebug(1); }
+		case ['--override']       { $mt->setOverride(1); }
 		else { push @curlargs, $arg }
 	}
 }
@@ -50,8 +50,8 @@ $mt->setURI($uri);
 $mt->head();
 $mt->handle_redirection();
 
-my $result = $timemap ? 
-	$mt->process_timemap( $timemap , @curlargs ) : 
+my $result = $timemap ?
+	$mt->process_timemap( $timemap , @curlargs ) :
 	$mt->process_uri( @curlargs );
 
 if(! $outfile){

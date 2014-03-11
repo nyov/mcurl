@@ -10,10 +10,10 @@ sub printDebug;
 
 sub new {
 	my $self = {
-		URI		=> undef,	#String, This is the input URI that we need to retrieve its mementos
-		Text	=> undef,	#String, the URI content
-		RedirectionList   => undef,
-		FollowEmbedded	=> 0,
+		URI => undef, #String, This is the input URI that we need to retrieve its mementos
+		Text => undef, #String, the URI content
+		RedirectionList => undef,
+		FollowEmbedded => 0,
 		TimeGate => "http://mementoproxy.cs.odu.edu/aggr/timegate",
 		Mode => 0, #0 is the default mode (Relaxed)
 		RedirectionPolicy => undef,
@@ -23,20 +23,20 @@ sub new {
 		RobotsTG => undef,
 		ReplaceFile => undef,
 		Headers => {
-					status=> undef,
-					vary => 0,	#Vary default false
-					MementoDT => undef,
-					Link => undef,
-					contentType => undef,
-					Location => undef
-					},
+			status=> undef,
+			vary => 0, #Vary default false
+			MementoDT => undef,
+			Link => undef,
+			contentType => undef,
+			Location => undef
+		},
 		Info => {
-					Type => 'original',
-					Original => undef,
-					Okay => 0,
-					TimeGate => undef,
-					TimeMap => undef,
-					Location =>undef
+			Type => 'original',
+			Original => undef,
+			Okay => 0,
+			TimeGate => undef,
+			TimeMap => undef,
+			Location =>undef
 		 }
 	};
 	bless $self, 'MementoThread';
@@ -126,7 +126,7 @@ sub head {
 	my ($self) = @_;
 	$self->printDebug("Starting with head command to determine resource type.");
 	my $ret=$self->read_cmd(qw.curl -I --trace.,$self->datetime_flag(),$self->{URI});
-	
+
 	#Start to look to the different Headers options
 	$self->parseHeaders($ret);
 
@@ -151,7 +151,7 @@ sub selectTimeGate(){
 	} elsif (  $self->{Info}->{Type} eq "TimeGate"){
 		$self->printDebug("Resource Type is TimeGate case: Accepted.");
 		$self->{TimeGate} = $self->{URI};
-		
+
 		#Additional steps required in calling the function the memento
 		#or, we can remove one of these fields at all
 	} elsif($self->{Info}->{TimeGate}){
@@ -171,23 +171,23 @@ sub selectTimeGate(){
 }
 
 sub parseHeaders {
-   my ($self, $header) = @_;
-   $self->printDebug("In parsing header function");
-   $_ = $tmp;
+	my ($self, $header) = @_;
+	$self->printDebug("In parsing header function");
+	$_ = $tmp;
 
-   if( m/Memento-Datetime:.*\n/){
+	if( m/Memento-Datetime:.*\n/){
 		$self->{Headers}->{MementoDT} = substr($&, 18);
-	 #	 print $self->{Headers}->{MementoDT};
+	#	 print $self->{Headers}->{MementoDT};
 	}
 
 	if( m/Vary:.*accept-datetime.*\n/){
 		$self->{Headers}->{vary} = 1;
 	#	 print $self->{Headers}->{vary} ;
-	 }
+	}
 
 	if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
 		$self->{Headers}->{status}= int(substr($&,9,3));
-	  #  print	$self->{Headers}->{status};
+	#	print $self->{Headers}->{status};
 	}
 
 	if( m/Content\-Type:.*\n/){
@@ -201,27 +201,27 @@ sub parseHeaders {
 
 		my @links = (m/<[^>]*>;\s?rel=\"?[^\"]*\"?/g);
 
-				for(my $i=0 ; $i<= $#links ; $i++){
-			   @line = split( /;/,$links[$i] ) ;
+		for(my $i=0 ; $i<= $#links ; $i++){
+			@line = split( /;/,$links[$i] ) ;
 
-			   if($line[1] =~ m/.*original.*/ ){
-					$self->{Info}->{Original} = substr($line[0], 1, length($line[0]) -2);
-			   }elsif ($line[1] =~ m/.*timegate.*/ ){
-				   $self->{Info}->{TimeGate} = substr($line[0], 1, length($line[0]) -2);
-			   }elsif ($line[1] =~ m/.*timemap.*/ ){
-				   $self->{Info}->{TimeMap} = substr($line[0], 1, length($line[0]) -2);
-			   }
+			if($line[1] =~ m/.*original.*/ ){
+				$self->{Info}->{Original} = substr($line[0], 1, length($line[0]) -2);
+			}elsif ($line[1] =~ m/.*timegate.*/ ){
+				$self->{Info}->{TimeGate} = substr($line[0], 1, length($line[0]) -2);
+			}elsif ($line[1] =~ m/.*timemap.*/ ){
+				$self->{Info}->{TimeMap} = substr($line[0], 1, length($line[0]) -2);
+			}
 		}
 	}
 	if( m/Location:.*\n/ ){
 		$self->{Headers}->{Location} = substr($&,10);
 	}
 	if($self->{Debug} == 1){
-	   print "DEBUG: Parsing header results: \n\t* Memento-datetime: $self->{Headers}->{MementoDT}\n";
-	   print "\t* VARY: $self->{Headers}->{vary} \n\t* HTTP Status:  $self->{Headers}->{status}\n";
-	   print "\t* Follow the embedded resources: $self->{FollowEmbedded} \n";
-	   print "\t* Link (org): $self->{Info}->{Original}\n\t* Link (timegate):$self->{Info}->{TimeGate}\n";
-	   print "\t* Link (timemap):$self->{Info}->{TimeMap}\n\t* Location: $self->{Headers}->{Location} \n";
+		print "DEBUG: Parsing header results: \n\t* Memento-datetime: $self->{Headers}->{MementoDT}\n";
+		print "\t* VARY: $self->{Headers}->{vary} \n\t* HTTP Status:  $self->{Headers}->{status}\n";
+		print "\t* Follow the embedded resources: $self->{FollowEmbedded} \n";
+		print "\t* Link (org): $self->{Info}->{Original}\n\t* Link (timegate):$self->{Info}->{TimeGate}\n";
+		print "\t* Link (timemap):$self->{Info}->{TimeMap}\n\t* Location: $self->{Headers}->{Location} \n";
 	}
 }
 
@@ -265,13 +265,9 @@ sub determineResourceType {
 		#Not Okay
 	}
 
-
-
 	#Check for the time bubble
 
-
 	#Get the URI from the memento URI
-
 
 }
 
@@ -280,7 +276,7 @@ sub discover_tg_robots {
 	$self->printDebug("Discovering Timegate robots");
 	my $robotTG = '';
 	my $urlObj = URI->new($self->{URI});
-	my $host =	"http://".$urlObj->host( ) .'/robots.txt' ;
+	my $host = "http://".$urlObj->host( ) .'/robots.txt' ;
 	my @lines =$self->read_cmd_multi(undef,(qw(curl -L),$host));
 	foreach (@lines) {
 		if( index($_, 'TimeGate') ==0){
@@ -301,7 +297,7 @@ sub process_uri {
 	my ($self, @params) = @_;
 
 	$self->printDebug("in process_uri");
-	my	@command =("curl", @params, $self->datetime_flag());
+	my @command =("curl", @params, $self->datetime_flag());
 
 	#it has a problem with different timegates values
 	# Ex. mcurl.pl -I -L --datetime "Fri, 23 July 2009 12:00:00 GMT"  http://lanlsource.lanl.gov/hello
@@ -322,70 +318,65 @@ sub handle_redirection {
 	$self->printDebug("handle_redirection();");
 
 	#Redirection policy case 1, URI-R has 302
-	if( $self->{Headers}->{status} > 299 and $self->{Headers}->{status} < 399 and	 $self->{Info}->{Type} eq 'original' ){
-			$self->printDebug("Redirection policy #1, URI-R: $self->{URI} has a redirection to $self->{Headers}->{Location}");
-			my $acceptDateTimeHeader = "";
+	if( $self->{Headers}->{status} > 299 and $self->{Headers}->{status} < 399 and $self->{Info}->{Type} eq 'original' ){
+		$self->printDebug("Redirection policy #1, URI-R: $self->{URI} has a redirection to $self->{Headers}->{Location}");
+		my $acceptDateTimeHeader = "";
 
-		   my @command=qw(curl -I -L);
-			push @command,("-H", "'Accept-Datetime:$self->{DateTime}'");
+		my @command=qw(curl -I -L);
+		push @command,("-H", "'Accept-Datetime:$self->{DateTime}'");
 
-			push @command, defined( $self->{Info}->{TimeGate} ) ? 
-				$self->{Info}->{TimeGate}: 
-				$self->{TimeGate} . "/" . $self->{URI};
+		push @command, defined( $self->{Info}->{TimeGate} ) ?
+		$self->{Info}->{TimeGate}:
+		$self->{TimeGate} . "/" . $self->{URI};
 
-			my $results =$self->read_cmd($command);
+		my $results =$self->read_cmd($command);
 
-			#if the status 404 move to the redirected location
-			my $redirectionStatus = 404;
-			my @redirectionStatusList = ($results =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/g);
+		#if the status 404 move to the redirected location
+		my $redirectionStatus = 404;
+		my @redirectionStatusList = ($results =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/g);
 
-			if($#redirectionStatusList > 0){
-				$redirectionStatus = int(substr( @redirectionStatusList[-1],9,3));
-			}
-			#if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
-			#	$redirectionStatus	= int(substr($&,9,3));
-			#}
+		if($#redirectionStatusList > 0){
+			$redirectionStatus = int(substr( @redirectionStatusList[-1],9,3));
+		}
+		#if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
+		#	$redirectionStatus = int(substr($&,9,3));
+		#}
 
-			# the status may be 200, 302, 404
-		#	 if ($redirectionStatus >=300 and $redirectionStatus <400){
-				#it's an expected status because the timegate will redirect to the memento
-				#TODO
-				# should we test the location value?
-			  #  while( $redirectionStatus >=300 and $redirectionStatus <400 ){
+		# the status may be 200, 302, 404
+		#if ($redirectionStatus >=300 and $redirectionStatus <400){
+			#it's an expected status because the timegate will redirect to the memento
+			#TODO
+			# should we test the location value?
+		#	while( $redirectionStatus >=300 and $redirectionStatus <400 ){
+		#		my $newLoc = "";
+		#		if( $results  =~ m/Location:.*\n/ ){
+		#			$newLoc = substr($&,10);
+		#		}
+		#		$results  = `curl -I $newLoc`;
+		#		$redirectionStatus = 404;
+		#		if( $results  =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
+		#			$redirectionStatus	= int(substr($&,9,3));
+		#		}
 
-			   #	 my $newLoc = "";
-			   #	 if( $results  =~ m/Location:.*\n/ ){
+		#	}
+		#	print "DEBUG: Status equals ($redirectionStatus), use the original URI\n";
+		#	return;
 
-				#		 $newLoc = substr($&,10);
-				 #	 }
-				  #  $results  = `curl -I $newLoc`;
-				  #  $redirectionStatus = 404;
-				  #  if( $results  =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
-				  #		$redirectionStatus	= int(substr($&,9,3));
-				  #  }
-
-			 #	 }
-			  #  print "DEBUG: Status equals ($redirectionStatus), use the original URI\n";
-			  #  return;
-
-		 #	 }
-			if( $redirectionStatus == 200 ){
-
-				#that's ok, use the original URI
-				$self->printDebug("Memento redirection status equals ($redirectionStatus), use the original URI");
-				return;
-				#todo
-				#check for the time bubble
-
-			} else{ #Not success nor redirect
-				# use the Location URI
-				$self->printDebug("Memento redirection status equals ($redirectionStatus), use the redirected URI: $self->{Headers}->{Location}");
-				$self->{URI}= $self->{Headers}->{Location} ;
-				$self->head();
-				return;
-			}
+		#}
+		if( $redirectionStatus == 200 ){
+			#that's ok, use the original URI
+			$self->printDebug("Memento redirection status equals ($redirectionStatus), use the original URI");
+			return;
+			#todo
+			#check for the time bubble
+		} else{ #Not success nor redirect
+			# use the Location URI
+			$self->printDebug("Memento redirection status equals ($redirectionStatus), use the redirected URI: $self->{Headers}->{Location}");
+			$self->{URI}= $self->{Headers}->{Location} ;
+			$self->head();
+			return;
+		}
 	}
-
 }
 
 sub retrieve_embedded {
@@ -436,7 +427,7 @@ sub retrieve_embedded {
 			$pageText =~ s/$oldURI/$newURI/g;
 
 			$self->printDebug("Replace $oldURI");
-		  	$self->printDebug("With $newURI");
+			$self->printDebug("With $newURI");
 			print $dumpFile $oldURI .",".$newURI."\n" if( defined($dumpFile) );
 		}
 	}
@@ -453,28 +444,27 @@ sub unrewriteURI {
 		index($orgURI ,'enterprise.archiefweb.eu/archives/archiefweb') > -1 or
 		index($orgURI ,'memento.waybackmachine.org/memento/') > -1 or
 		index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1
-		) {
-			my $nHttp = index($orgURI , 'http://' , 10);
-			if($nHttp > 1){
-				$self->printDebug("Successfully, URI is: ".substr $orgURI,$nHttp);
-				return substr $orgURI,$nHttp ;
-			}
-
+	) {
+		my $nHttp = index($orgURI , 'http://' , 10);
+		if($nHttp > 1){
+			$self->printDebug("Successfully, URI is: ".substr $orgURI,$nHttp);
+			return substr $orgURI,$nHttp ;
+		}
 	} #else
 	$self->printDebug("unwriteURI unsuccessful");
 	return "";
 }
 
-sub process_timemap{
+sub process_timemap {
 	my ($self, $timemap, @params) = @_;
 	$self->printDebug("process_timemap(@_);");
 	my $info=$self->{Info};
 	my $timeMapURI = undef;
 
-   if(defined($info->{TimeMap})){
+	if(defined($info->{TimeMap})){
 		$self->printDebug("Read TimeMap from the Link header ");
 		$timeMapURI = $info->{TimeMap};
-	} 
+	}
 	#TODO: check if the concatenation between the URI and TimeGate required or not
 	else {
 		$self->printDebug("Head request to the TimeGate to get the TimeMap");
@@ -483,15 +473,15 @@ sub process_timemap{
 
 		$_ = $self->read_cmd(qw(curl -I -L), @params, $uri);
 
-	   if( m/Link:.*\n/ ){
+		if( m/Link:.*\n/ ){
 			my @links = ( m/<[^>]*>;\s?rel=\"?[^\"]*\"?/g );
 			foreach $link (@links){
 				@line = split( /;/,$link ) ;
 				if ($line[1] =~ m/.*timemap.*/ ){
-				   $info->{TimeMap} = substr($line[0], 1, length($line[0]) -2);
-				   $timeMapURI = $info->{TimeMap} ;
+					$info->{TimeMap} = substr($line[0], 1, length($line[0]) -2);
+					$timeMapURI = $info->{TimeMap} ;
 					$self->printDebug("Head request successfully retrieved the TimeMap ");
-			   }
+				}
 			}
 		}
 	}
@@ -507,8 +497,7 @@ sub process_timemap{
 		$timeMapURI = $timeMapURI.$timemap. '/'.$self->{URI};
 	}
 
-	return $self->read_cmd(("curl", @params, $timeMapURI));   
+	return $self->read_cmd(("curl", @params, $timeMapURI));
 }
-
 
 1;

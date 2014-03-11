@@ -16,9 +16,9 @@ our @localURIs;
 #    return $self;
 #}
 sub start {
-        
+
 	my ($self, $tagname, $attr) = @_;
-       
+
         if ($tagname eq 'img') {
 		my $url = $attr->{ src };
 		#print "img found: $url\n";
@@ -26,10 +26,10 @@ sub start {
 		{
 			push(@localURIs,$url);
 
-			
+
 		}
-	
-		
+
+
 	} elsif($tagname eq 'script') {
 		my $url = $attr->{ src };
 		if($url)
@@ -45,7 +45,7 @@ sub start {
 	}
         #print "\n==========================================\n";
         #print @localURIs;
-       
+
 }
 
 sub returnURIs {

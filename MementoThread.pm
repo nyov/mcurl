@@ -1,6 +1,6 @@
 package MementoThread;
 
-use mementoParser;
+use MementoParser;
 use URI;
 
 use FindBin;

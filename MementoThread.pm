@@ -17,7 +17,7 @@ sub new {
 		TimeGate => "http://mementoproxy.cs.odu.edu/aggr/timegate",
 		Mode => 0, #0 is the default mode (Relaxed)
 		RedirectionPolicy => undef,
-		DateTime =>undef,
+		DateTime => undef,
 		Debug => 0,
 		Override => 0,
 		RobotsTG => undef,
@@ -36,8 +36,8 @@ sub new {
 			Okay => 0,
 			TimeGate => undef,
 			TimeMap => undef,
-			Location =>undef
-		 }
+			Location => undef
+		}
 	};
 	bless $self, 'MementoThread';
 	$self->printDebug("Starting a new memento thread.");
@@ -148,13 +148,13 @@ sub selectTimeGate(){
 		#The timegate will be as it's in $self->{TimeGate}
 		$self->printDebug("Override case:Accepted.");
 
-	} elsif (  $self->{Info}->{Type} eq "TimeGate"){
+	} elsif ($self->{Info}->{Type} eq "TimeGate"){
 		$self->printDebug("Resource Type is TimeGate case: Accepted.");
 		$self->{TimeGate} = $self->{URI};
 
 		#Additional steps required in calling the function the memento
 		#or, we can remove one of these fields at all
-	} elsif($self->{Info}->{TimeGate}){
+	} elsif ($self->{Info}->{TimeGate}) {
 		$self->printDebug("TimeGate is defined in Link header case: Accepted");
 		$self->{TimeGate}= $self->{Info}->{TimeGate} ;
 
@@ -177,12 +177,12 @@ sub parseHeaders {
 
 	if( m/Memento-Datetime:.*\n/){
 		$self->{Headers}->{MementoDT} = substr($&, 18);
-	#	 print $self->{Headers}->{MementoDT};
+	#	print $self->{Headers}->{MementoDT};
 	}
 
 	if( m/Vary:.*accept-datetime.*\n/){
 		$self->{Headers}->{vary} = 1;
-	#	 print $self->{Headers}->{vary} ;
+	#	print $self->{Headers}->{vary} ;
 	}
 
 	if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
@@ -206,9 +206,9 @@ sub parseHeaders {
 
 			if($line[1] =~ m/.*original.*/ ){
 				$self->{Info}->{Original} = substr($line[0], 1, length($line[0]) -2);
-			}elsif ($line[1] =~ m/.*timegate.*/ ){
+			} elsif ($line[1] =~ m/.*timegate.*/ ){
 				$self->{Info}->{TimeGate} = substr($line[0], 1, length($line[0]) -2);
-			}elsif ($line[1] =~ m/.*timemap.*/ ){
+			} elsif ($line[1] =~ m/.*timemap.*/ ){
 				$self->{Info}->{TimeMap} = substr($line[0], 1, length($line[0]) -2);
 			}
 		}
@@ -218,7 +218,7 @@ sub parseHeaders {
 	}
 	if($self->{Debug} == 1){
 		print "DEBUG: Parsing header results: \n\t* Memento-datetime: $self->{Headers}->{MementoDT}\n";
-		print "\t* VARY: $self->{Headers}->{vary} \n\t* HTTP Status:  $self->{Headers}->{status}\n";
+		print "\t* VARY: $self->{Headers}->{vary} \n\t* HTTP Status: $self->{Headers}->{status}\n";
 		print "\t* Follow the embedded resources: $self->{FollowEmbedded} \n";
 		print "\t* Link (org): $self->{Info}->{Original}\n\t* Link (timegate):$self->{Info}->{TimeGate}\n";
 		print "\t* Link (timemap):$self->{Info}->{TimeMap}\n\t* Location: $self->{Headers}->{Location} \n";
@@ -231,13 +231,10 @@ sub determineResourceType {
 	#Case 1, 2, 3
 	if($self->{status} == 200 && defined($self->{Headers}->{MementoDT})){
 		$self->{Info}->{Type} = "Memento";
-
 		if( length( $self->{Info}->{Original} ) != 0) {
-
 			$self->{URI} = $self->{Info}->{Original} ;
-			 return;
+			return;
 		}
-
 	}
 
 	# Review if the URI in the whiteList
@@ -249,18 +246,15 @@ sub determineResourceType {
 	}
 
 	#case 5, 6
-	if( $self->{Headers}->{vary} == 1  and $self->{Headers}->{status} eq 302){
+	if( $self->{Headers}->{vary} == 1 and $self->{Headers}->{status} eq 302){
 		$self->{Info}->{Type} = "TimeGate";
-
 		return;
 	}
 
 	if( $self->{Headers}->{status} == 302
 			&& length($self->{Info}->{Original} ) != 0){
-
 		#intermdeiate Okay
-
-	}elsif (length($self->{Info}->{Original} ) !=0){
+	} elsif (length($self->{Info}->{Original} ) !=0){
 		#Type memento
 		#Not Okay
 	}
@@ -268,7 +262,6 @@ sub determineResourceType {
 	#Check for the time bubble
 
 	#Get the URI from the memento URI
-
 }
 
 sub discover_tg_robots {
@@ -306,7 +299,7 @@ sub process_uri {
 	my $info = $self->{Info};
 	my $uri = $self->{TimeGate};
 	$uri .= "/$self->{URI}" unless ($info->{TimeGate} or $info->{Type} eq "TimeGate");
-	my $result =$self->read_cmd(@command,$uri);
+	my $result = $self->read_cmd(@command,$uri);
 
 	#based on the type (text/html) and stict/relaxed mode we will force the retrieve embedded via memento method
 	return $self->retrieve_embedded($result) if $self->{FollowEmbedded} and $self->{Mode};
@@ -326,8 +319,8 @@ sub handle_redirection {
 		push @command,("-H", "'Accept-Datetime:$self->{DateTime}'");
 
 		push @command, defined( $self->{Info}->{TimeGate} ) ?
-		$self->{Info}->{TimeGate}:
-		$self->{TimeGate} . "/" . $self->{URI};
+			$self->{Info}->{TimeGate} :
+			$self->{TimeGate} . "/" . $self->{URI};
 
 		my $results =$self->read_cmd($command);
 
@@ -336,7 +329,7 @@ sub handle_redirection {
 		my @redirectionStatusList = ($results =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/g);
 
 		if($#redirectionStatusList > 0){
-			$redirectionStatus = int(substr( @redirectionStatusList[-1],9,3));
+			$redirectionStatus = int(substr(@redirectionStatusList[-1],9,3));
 		}
 		#if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
 		#	$redirectionStatus = int(substr($&,9,3));
@@ -349,19 +342,17 @@ sub handle_redirection {
 			# should we test the location value?
 		#	while( $redirectionStatus >=300 and $redirectionStatus <400 ){
 		#		my $newLoc = "";
-		#		if( $results  =~ m/Location:.*\n/ ){
+		#		if( $results =~ m/Location:.*\n/ ){
 		#			$newLoc = substr($&,10);
 		#		}
-		#		$results  = `curl -I $newLoc`;
+		#		$results = `curl -I $newLoc`;
 		#		$redirectionStatus = 404;
-		#		if( $results  =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
-		#			$redirectionStatus	= int(substr($&,9,3));
+		#		if( $results =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
+		#			$redirectionStatus = int(substr($&,9,3));
 		#		}
-
 		#	}
 		#	print "DEBUG: Status equals ($redirectionStatus), use the original URI\n";
 		#	return;
-
 		#}
 		if( $redirectionStatus == 200 ){
 			#that's ok, use the original URI
@@ -392,15 +383,15 @@ sub retrieve_embedded {
 	my $memParser = new MementoParser();
 	$memParser->parse($pageText);
 
-	my @oldURIs =  $memParser->returnURIs();
+	my @oldURIs = $memParser->returnURIs();
 	$self->printDebug("Number of embedded resources retrieved: " . $#oldURIs);
 
-	my %hash   = map { $_, 'aa'} @oldURIs;
+	my %hash = map { $_, 'aa'} @oldURIs;
 	foreach my $oldURI (keys %hash) {
 		my $completeOldURI = $oldURI;
 
 		if(index($oldURI, "http") != 0){
-			if(index($self->{URI},'\r')>0 or  index($self->{URI},'\n')>0 ) {
+			if(index($self->{URI},'\r')>0 or index($self->{URI},'\n')>0 ) {
 				$completeOldURI = substr($self->{URI},0, -2 ). "/".$oldURI;
 			} else {
 				$completeOldURI = $self->{URI}."/" . $oldURI;
@@ -440,7 +431,7 @@ sub unrewriteURI {
 	$self->printDebug("Try to unrewrite the URI, ");
 	if( index($orgURI ,'archive.org/') > -1 or
 		index($orgURI ,'webarchive.nationalarchives.gov.uk') > -1 or
-		index($orgURI ,'wayback.archive-it.org') > -1  or
+		index($orgURI ,'wayback.archive-it.org') > -1 or
 		index($orgURI ,'enterprise.archiefweb.eu/archives/archiefweb') > -1 or
 		index($orgURI ,'memento.waybackmachine.org/memento/') > -1 or
 		index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1

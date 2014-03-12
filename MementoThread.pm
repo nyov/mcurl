@@ -5,9 +5,8 @@ use URI;
 use FindBin;
 use lib "$FindBin::Bin";
 use MementoParser;
-#constructor
-sub new {
 
+sub new {
 	my $self = {
 		URIQ => undef, #String, This is the input URI that we need to retrieve its mementos
 		URIR => undef,
@@ -41,7 +40,7 @@ sub new {
 			TimeMap => undef,
 			Location => undef,
 			OneMemento => 0
-		 }
+		}
 	};
 	if($self->{Debug} == 1){
 		print "\nDEBUG: Starting a new memento thread\n";
@@ -77,7 +76,7 @@ sub setDateTime {
 
 sub setDebug {
 	my ($self, $lDebug) = @_;
-	$self->{Debug } = $lDebug if defined($lDebug);
+	$self->{Debug} = $lDebug if defined($lDebug);
 }
 
 sub setOverride {
@@ -181,14 +180,14 @@ sub selectTimeGate(){
 	if($self->{Override} == 1){
 		#The timegate will be as it's in $self->{TimeGate}
 		#Remove the others values like $self->{Info}->{TimeGate}
-		$self->{Info}->{TimeGate}  =undef;
+		$self->{Info}->{TimeGate} = undef;
 		if($self->{Debug} == 1){
 			print "DEBUG: Override case:Accepted\n";
 			print "TimeGate: " .$self->{TimeGate}."\n"
 		}
 #		return;
 
-	} elsif (  $self->{Info}->{Type} eq "TimeGate"){
+	} elsif ($self->{Info}->{Type} eq "TimeGate"){
 		$self->{TimeGate} = $self->{URIQ};
 
 		if($self->{Debug} == 1){
@@ -216,7 +215,7 @@ sub selectTimeGate(){
 		print "DEBUG: TimeGate is not changed\n";
 		print "TimeGate: " .$self->{TimeGate}."\n";
 	}
-			$self->{URIQ} =  $self->{TimeGate}."/".$self->{URIQ};
+			$self->{URIQ} = $self->{TimeGate}."/".$self->{URIQ};
 	}
 	# elsif (defined($self->{RobotsTG})){
 #		$self->{TimeGate} = $self->{RobotsTG};
@@ -270,28 +269,28 @@ sub findMemento(){
 
 		if($self->{Headers}->{status} > 300 and $self->{Headers}->{status} <400){
 			#Follow
-			if($self->{Debug} == 1) {print "DEBUG: TEST - 1 YES FOLLOW\n"};
+			if($self->{Debug} == 1) { print "DEBUG: TEST - 1 YES FOLLOW\n"};
 			return $self->follow();
 		} else {
-			if($self->{Debug} == 1) {print "DEBUG: TEST - 1 YES MEMENTO\n"};
+			if($self->{Debug} == 1) { print "DEBUG: TEST - 1 YES MEMENTO\n"};
 			$self->{memento}=$self->{URIQ};
 			return $self->{URIQ};
 		}
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 1 NO\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 1 NO\n"};
 	}
 
 	#########################
 	# TEST - 2 -- POOR man
 	if($self->{Headers}->{status} > 299 and $self->{Headers}->{status} < 400){
-		if($self->{Debug} == 1){  print "DEBUG: TEST - 2 YES\n"};
+		if($self->{Debug} == 1){ print "DEBUG: TEST - 2 YES\n"};
 
 		#FOLLOW
 	#	print "=============================================================\n";
 
 		return $self->follow();
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 2 NO\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 2 NO\n"};
 	}
 
 	#########################
@@ -308,14 +307,14 @@ sub findMemento(){
 	#########################
 	# TEST - 4
 	if( $self->{Info}->{TimeGate}!= ''){
-		if($self->{Debug} == 1)  {print "DEBUG: TEST - 4 YES\n"};
+		if($self->{Debug} == 1) {print "DEBUG: TEST - 4 YES\n"};
 		$tg_flag = 1;
 		$self->{URIQ} = $self->{Info}->{TimeGate};
 	#	print "=============================================================\n";
 
 		return $self->findMemento();
 	} else {
-		if($self->{Debug} == 1)  {print "DEBUG: TEST - 4 NO\n"};
+		if($self->{Debug} == 1) {print "DEBUG: TEST - 4 NO\n"};
 
 		$self->{URIR} = $self->{URIQ};
 		$self->selectTimeGate();
@@ -366,7 +365,7 @@ sub parseHeaders {
 
 	if( m/Vary:.*accept-datetime.*\n/){
 		$self->{Headers}->{vary} = 1;
-	 }
+	}
 
 	if( m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
 		$self->{Headers}->{status}= int(substr($&,9,3));
@@ -384,7 +383,6 @@ sub parseHeaders {
 		my @links = (m/<[^>]*>;[^<]*rel=\"?[^\"]*\"?/g);
 
 		for(my $i=0 ; $i<= $#links ; $i++){
-
 			@line = split( /;/,$links[$i] ) ;
 
 			if($links[$i] =~ m/.*original.*/ ){
@@ -441,7 +439,7 @@ sub discover_tg_robots {
 				return;
 			}
 		}
-	 }
+	}
 }
 
 sub process_uri {
@@ -529,10 +527,10 @@ sub handle_redirection {
 			# should we test the location value?
 		#	while( $redirectionStatus >=300 and $redirectionStatus <400 ){
 		#		my $newLoc = "";
-		#		if( $results  =~ m/Location:.*\n/ ){
+		#		if( $results =~ m/Location:.*\n/ ){
 		#			$newLoc = substr($&,10);
 		#		}
-		#		$results  = `curl -I $newLoc`;
+		#		$results = `curl -I $newLoc`;
 		#		$redirectionStatus = 404;
 		#		if( $results =~ m/HTTP\/1\.\d\s\d\d\d\s.*\n/ ){
 		#			$redirectionStatus = int(substr($&,9,3));
@@ -575,13 +573,13 @@ sub retrieve_embedded {
 	my $memParser = new MementoParser();
 	$memParser->parse($pageText);
 
-	my @oldURIs =  $memParser->returnURIs();
+	my @oldURIs = $memParser->returnURIs();
 
 	if($self->{Debug} == 1){
 		print "DEBUG: Number of embedded resources retrieved: " . $#oldURIs."\n";
 	}
 
-	my %hash   = map { $_, 'aa'} @oldURIs;
+	my %hash = map { $_, 'aa'} @oldURIs;
 	# or a hash slice: @hash{ @array } = ();3. # or a foreach: $hash{$_} = 1 foreach ( @array );4.5.
 	#my @unique = keys %hash;
 
@@ -622,12 +620,12 @@ sub retrieve_embedded {
 			$pageText =~ s/$oldURI/$newURI/g;
 
 			if($self->{Debug} == 1){
-				print "DEBUG: Replace $oldURI \n\t      With $newURI\n";
+				print "DEBUG: Replace $oldURI \n\tWith $newURI\n";
 			}
 			if( defined($dumpFile) ){
 				print $dumpFile $oldURI .",".$newURI."\n";
 			}
-		}  else {
+		} else {
 			if($self->{Debug} == 1){
 				print "DEBUG: Replace was not available\n";
 				print "DEBUG: $embeddedResult \n";
@@ -666,13 +664,13 @@ sub unrewriteURI {
 		index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1
 	) {
 		my $nHttp = index($orgURI , 'http://' , 10);
-			if($nHttp > 1){
-				if($self->{Debug} == 1){
-					print "DEBUG: Successfully, URI is: ".substr $orgURI,$nHttp ."\n";
-					print "\n";
-				}
-				return substr $orgURI,$nHttp ;
+		if($nHttp > 1){
+			if($self->{Debug} == 1){
+				print "DEBUG: Successfully, URI is: ".substr $orgURI,$nHttp ."\n";
+				print "\n";
 			}
+			return substr $orgURI,$nHttp ;
+		}
 	}
 	if($self->{Debug} == 1){
 		print "UnSuccessfully\n";
@@ -681,7 +679,6 @@ sub unrewriteURI {
 }
 
 sub process_timemap {
-
 	my ($self, $timemap, @params) = @_;
 	if($self->{Debug} == 1){
 		print "DEBUG: in process TimeMap type: $timemap \n";

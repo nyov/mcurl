@@ -17,15 +17,17 @@ sub start {
 
 	if ($tagname eq 'img') {
 		my $url = $attr->{ src };
-		#print "img found: $url\n";
-		if($url)
-		{
+		if($url) {
 			push(@localURIs,$url);
 		}
 	} elsif($tagname eq 'script') {
 		my $url = $attr->{ src };
-		if($url)
-		{
+		if($url) {
+			push(@localURIs,$url);
+		}
+	} elsif($tagname eq 'style') {
+		my $url = $attr->{ src };
+		if($url) {
 			push(@localURIs,$url);
 		}
 	}

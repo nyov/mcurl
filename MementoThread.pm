@@ -90,7 +90,6 @@ sub setReplaceFile() {
 }
 
 sub setParams(){
-
 	my ($self, @lParams ) = @_;
 	#Here we may have problem with -H and --header for multi values
 	$self->{AllParams} = join(' ', map { $_ eq '' || /^--/ ? $_ : "'" . $_ . "'" } @lParams);
@@ -251,20 +250,19 @@ sub findMemento(){
 	#########################
 	# TEST - 0
 	if($self->{Headers}->{vary} == 1){ # It is a TimeGate
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 0 YES\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 0 YES\n"};
 		$tg_flag=1;
 		$self->{URIR} = $self->{URIQ};
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 0 NO\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 0 NO\n"};
 	}
 
 	#########################
 	# TEST - 1
-	my $rewrittenURI = $self->unrewriteURI($self->{URIQ});
-	if( length($self->{Headers}->{MementoDT})>0 or length($rewrittenURI)>0 ){
+	my $isRewrittenURI = $self->unrewriteURI($self->{URIQ});
+	if( length($self->{Headers}->{MementoDT})>0 or $isRewrittenURI ){
 		$tg_flag = 0;
 		$self->{URIR} = '';
-		#set uri-r = blank
 	#	print "=============================================================\n";
 
 		if($self->{Headers}->{status} > 300 and $self->{Headers}->{status} <400){
@@ -301,20 +299,20 @@ sub findMemento(){
 
 		return $self->{URIQ};
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 3 NO\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 3 NO\n"};
 	}
 
 	#########################
 	# TEST - 4
 	if( $self->{Info}->{TimeGate}!= ''){
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 4 YES\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 4 YES\n"};
 		$tg_flag = 1;
 		$self->{URIQ} = $self->{Info}->{TimeGate};
 	#	print "=============================================================\n";
 
 		return $self->findMemento();
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: TEST - 4 NO\n"};
+		if($self->{Debug} == 1) { print "DEBUG: TEST - 4 NO\n"};
 
 		$self->{URIR} = $self->{URIQ};
 		$self->selectTimeGate();
@@ -330,14 +328,14 @@ sub follow{
 	my ($self) = @_;
 
 	if( length($self->{Headers}->{Location} )>0){
-	if($self->{Debug} == 1) {print "DEBUG: follow Location\n"};
+	if($self->{Debug} == 1) { print "DEBUG: follow Location\n"};
 
 		$self->{URIQ} = $self->{Headers}->{Location};
 	#	print "=============================================================\n";
 
 		$self->findMemento();
 	} else {
-		if($self->{Debug} == 1) {print "DEBUG: follow ERROR \n"};
+		if($self->{Debug} == 1) { print "DEBUG: follow ERROR \n"};
 	#	print "=============================================================\n";
 
 		return $self->{URIQ};
@@ -586,11 +584,19 @@ sub retrieve_embedded {
 	foreach my $oldURI (keys %hash)
 	{
 		my $completeOldURI = $oldURI;
-
+		print $completeOldURI."\n";
 		#There is a missing testcase here if the URI ends with .html for example
 		if(index($oldURI, "http") != 0){
-			my $urlObj = URI->new($self->{memento});
-			$completeOldURI = URI->new_abs($oldURI, $urlObj );  ;
+			$base_uri = $self->{memento};
+			$orgIdx = index($base_uri, "http", 1);
+
+			if($orgIdx>1){
+				$base_memento= substr $base_uri,0,$orgIdx;
+				$base_uri= substr $base_uri,$orgIdx;
+				my $urlObj = URI->new($base_uri);
+
+				$completeOldURI = URI->new_abs($oldURI, $urlObj );
+			}
 			#$completeOldURI = $baseURI. $oldURI;
 		}
 
@@ -658,10 +664,11 @@ sub unrewriteURI {
 	}
 	if( index($orgURI ,'archive.org/') > -1 or
 		index($orgURI ,'webarchive.nationalarchives.gov.uk') > -1 or
-		index($orgURI ,'wayback.archive-it.org') > -1  or
+		index($orgURI ,'wayback.archive-it.org') > -1 or
 		index($orgURI ,'enterprise.archiefweb.eu/archives/archiefweb') > -1 or
 		index($orgURI ,'memento.waybackmachine.org/memento/') > -1 or
-		index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1
+		index($orgURI ,'www.webarchive.org.uk/waybacktg/memento') > -1 or
+		index($orgURI ,'webcitation.org') > -1
 	) {
 		my $nHttp = index($orgURI , 'http://' , 10);
 		if($nHttp > 1){
@@ -669,13 +676,15 @@ sub unrewriteURI {
 				print "DEBUG: Successfully, URI is: ".substr $orgURI,$nHttp ."\n";
 				print "\n";
 			}
-			return substr $orgURI,$nHttp ;
+		#	return substr $orgURI,$nHttp ;
 		}
+		return 1;
 	}
 	if($self->{Debug} == 1){
 		print "UnSuccessfully\n";
 	}
-	return "";
+	#return "";
+	return 0;
 }
 
 sub process_timemap {
